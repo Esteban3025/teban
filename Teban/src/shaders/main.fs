@@ -2,11 +2,14 @@
 
 out vec4 FragColor;
 
-in vec4 ourColor;
+in vec2 texCoord;
 
-uniform float rotation;
+uniform sampler2D texture1;
+
+uniform float move;
+
 
 void main()
 {
-   FragColor = ourColor * rotation;
+   FragColor = texture(texture1, texCoord);
 }

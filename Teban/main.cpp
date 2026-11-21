@@ -1,6 +1,12 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <Teban/src/tools/SHADER.h>
+#include <Teban/src/tools/TEXTURES.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <vector>
+
 
 #include <iostream>
 
@@ -9,8 +15,9 @@ void processInput(GLFWwindow* window);
 
 int screenWidth = 800;
 int screenHeight = 600;
-float triangleMove = 0.5f;
+float triangleMove = 0.8f;
 bool is_wireframe = false;
+float imagesUniformScale = 0.8f;
 
 int main()
 {
@@ -36,44 +43,117 @@ int main()
     }
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    glEnable(GL_DEPTH_TEST);
+
     Shader ourShader("Teban/src/shaders/main.vs", "Teban/src/shaders/main.fs");
 
     float vertices[] = {
-    -0.5f, -0.5f, 0.0f,
-     0.5f, -0.5f, 0.0f,
-     0.0f,  0.5f, 0.0f
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
 
+    unsigned int indices[] = {
+        0, 1, 3, // first triangle
+        1, 2, 3  // second triangle
+    };
+
+    
     unsigned int VBO, VAO;
     glGenBuffers(1, &VBO);
     glGenVertexArrays(1, &VAO);
+
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
 
-    
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+
+    unsigned int texture1 = loadTexture("Teban/src/textures/wall.jpg");
+
+    ourShader.use();
+    ourShader.setInt("texture1", 0);
 
     while (!glfwWindowShouldClose(window))
     {
         processInput(window);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        float rotation = sin(glfwGetTime());
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+
+        glm::mat4 view = glm::mat4(1.0f);
+        // note that we're translating the scene in the reverse direction of where we want to move
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+        glm::mat4 projection;
+        projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 
         ourShader.use();
-        ourShader.setFloat("rotation", rotation);
-        ourShader.setFloat("move", triangleMove);
+
+        ourShader.setMat4("model", model);
+        ourShader.setMat4("view", view);
+        ourShader.setMat4("projection", projection);
+   
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture1);
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
 
     glfwTerminate();
     return 0;
@@ -104,8 +184,19 @@ void processInput(GLFWwindow* window)
     }
 
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        triangleMove -= moveAmount;
+    {
+        if (imagesUniformScale <= 0.5f) 
+        {
+            return;
+        }
+        imagesUniformScale -= moveAmount;
+        std::cout << imagesUniformScale << "\n";
+    }
+        
 
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        triangleMove += moveAmount;
+    {
+        imagesUniformScale += moveAmount;
+        std::cout << imagesUniformScale << "\n";
+    }
 }

@@ -139,6 +139,7 @@
     <ClInclude Include="Teban\src\libraries\includes\GLFW\glfw3native.h" />
     <ClInclude Include="Teban\src\libraries\includes\KHR\khrplatform.h" />
     <ClInclude Include="Teban\src\tools\SHADER.h" />
+    <ClInclude Include="Teban\src\tools\TEXTURES.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

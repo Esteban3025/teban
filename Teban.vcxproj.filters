@@ -38,5 +38,8 @@
     <ClInclude Include="Teban\src\tools\SHADER.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="Teban\src\tools\TEXTURES.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
